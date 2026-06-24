@@ -43,7 +43,17 @@ export const FarmService = {
 
   // ✅ CREATE FARM
   async createFarm(payload) {
-    const { name, adminName, adminEmail, password, country, defaultLanguage, plan, startDate, endDate } = payload;
+    const {
+      name,
+      adminName,
+      adminEmail,
+      password,
+      country,
+      defaultLanguage,
+      planId,
+      startDate,
+      endDate,
+    } = payload;
 
     return prisma.$transaction(async (tx) => {
       const existingUser = await tx.user.findUnique({
@@ -58,13 +68,8 @@ export const FarmService = {
       }
 
       // Find the selected plan
-      const planRecord = await tx.plan.findFirst({
-        where: {
-          OR: [
-            { id: plan },
-            { name: { equals: plan, mode: "insensitive" } },
-          ],
-        },
+      const planRecord = await tx.plan.findUnique({
+        where: { id: planId },
       });
 
       if (!planRecord) {

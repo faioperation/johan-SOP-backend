@@ -20,13 +20,13 @@ export const FarmController = {
 
   async createFarm(req, res, next) {
     try {
-      const { name, adminName, adminEmail, password, country, defaultLanguage, plan, startDate, endDate } = req.body;
+      const { name, adminName, adminEmail, password, country, defaultLanguage, planId, startDate, endDate } = req.body;
 
-      if (!name || !adminName || !adminEmail || !password || !country || !defaultLanguage || !plan || !startDate || !endDate) {
+      if (!name || !adminName || !adminEmail || !password || !country || !defaultLanguage || !planId || !startDate || !endDate) {
         return sendResponse(res, {
           success: false,
           statusCode: StatusCodes.BAD_REQUEST,
-          message: "All fields are required including plan, start date, and end date",
+          message: "All fields are required including planId, start date, and end date",
           data: null,
         });
       }
@@ -38,7 +38,7 @@ export const FarmController = {
         password,
         country,
         defaultLanguage,
-        plan,
+        planId,
         startDate,
         endDate,
       });
