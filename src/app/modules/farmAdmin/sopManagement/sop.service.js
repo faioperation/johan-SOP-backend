@@ -111,14 +111,18 @@ const updateSOP = async (req) => {
   if (file) {
     updateData.fileUrl = `/uploads/sops/${file.filename}`;
     updateData.fileName = file.originalname;
-    updateData.fileType = path.extname(file.originalname).replace(".", "") || "pdf";
+    updateData.fileType =
+      path.extname(file.originalname).replace(".", "") || "pdf";
     if (!content) {
       updateData.source = "PDF_UPLOAD";
     }
 
     // Delete old file if it exists
     if (existingSOP.fileUrl) {
-      const oldFilePath = path.join(process.cwd(), existingSOP.fileUrl.replace(/^\/+/, ""));
+      const oldFilePath = path.join(
+        process.cwd(),
+        existingSOP.fileUrl.replace(/^\/+/, ""),
+      );
       if (fs.existsSync(oldFilePath)) {
         try {
           fs.unlinkSync(oldFilePath);
@@ -137,7 +141,7 @@ const updateSOP = async (req) => {
   console.log("SOP Updated Successfully:", {
     id: updatedSOP.id,
     newTitle: updatedSOP.title,
-    newCategory: updatedSOP.category
+    newCategory: updatedSOP.category,
   });
 
   return updatedSOP;
@@ -271,7 +275,8 @@ const createDigitalSOP = async (req) => {
   if (file) {
     sopData.fileUrl = `/uploads/sops/${file.filename}`;
     sopData.fileName = file.originalname;
-    sopData.fileType = path.extname(file.originalname).replace(".", "") || "pdf";
+    sopData.fileType =
+      path.extname(file.originalname).replace(".", "") || "pdf";
   }
 
   const sop = await prisma.sOP.create({

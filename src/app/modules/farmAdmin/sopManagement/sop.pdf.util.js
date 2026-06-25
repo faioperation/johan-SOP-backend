@@ -25,10 +25,7 @@ export function generateSOPPdf(sop) {
   });
 
   // ── Header ──
-  doc
-    .fontSize(22)
-    .font("Helvetica-Bold")
-    .text(sop.title, { align: "center" });
+  doc.fontSize(22).font("Helvetica-Bold").text(sop.title, { align: "center" });
 
   doc.moveDown(0.3);
 
@@ -86,19 +83,13 @@ function renderArrayContent(doc, items) {
     if (typeof item === "object" && item !== null) {
       // Section heading
       if (item.title) {
-        doc
-          .fontSize(15)
-          .font("Helvetica-Bold")
-          .text(item.title);
+        doc.fontSize(15).font("Helvetica-Bold").text(item.title);
         doc.moveDown(0.2);
       }
 
       // Section body
       if (item.text) {
-        doc
-          .fontSize(11)
-          .font("Helvetica")
-          .text(item.text, { indent: 15 });
+        doc.fontSize(11).font("Helvetica").text(item.text, { indent: 15 });
         doc.moveDown(0.5);
       }
     } else if (typeof item === "string") {

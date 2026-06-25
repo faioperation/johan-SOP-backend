@@ -5,7 +5,10 @@ import { checkAuthMiddleware } from "../../../middleware/checkAuthMiddleware.js"
 const router = Router();
 
 router.post("/register", FarmAdminAuthController.registerFarmAdmin);
-router.post("/verify-registration", FarmAdminAuthController.verifyRegistrationOtp);
+router.post(
+  "/verify-registration",
+  FarmAdminAuthController.verifyRegistrationOtp,
+);
 router.post("/resend-otp", FarmAdminAuthController.resendOtp);
 router.post("/login", FarmAdminAuthController.loginFarmAdmin);
 

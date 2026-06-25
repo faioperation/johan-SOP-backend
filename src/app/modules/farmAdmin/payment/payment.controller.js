@@ -5,7 +5,10 @@ import { StatusCodes } from "http-status-codes";
 const createCheckout = async (req, res, next) => {
   try {
     const user = req.user;
-    const checkoutUrl = await PaymentService.createCheckoutSession(user, req.body);
+    const checkoutUrl = await PaymentService.createCheckoutSession(
+      user,
+      req.body,
+    );
 
     sendResponse(res, {
       success: true,

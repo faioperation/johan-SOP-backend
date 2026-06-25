@@ -17,51 +17,51 @@ const getDashboardStats = async (farmId) => {
       completedTasks,
       todayMessages,
       unreadMessages,
-      subscription
+      subscription,
     ] = await Promise.all([
       // 👥 Total Users (Employees + Managers)
       prisma.user.count({
-        where: { farmId, role: { in: ["EMPLOYEE", "MANAGER"] } }
+        where: { farmId, role: { in: ["EMPLOYEE", "MANAGER"] } },
       }),
       prisma.user.count({
         where: {
           farmId,
           role: "EMPLOYEE",
-          createdAt: { gte: startOfMonth }
-        }
+          createdAt: { gte: startOfMonth },
+        },
       }),
 
       // 📄 SOPs
       prisma.sOP.count({
-        where: { farmId }
+        where: { farmId },
       }),
       prisma.sOP.count({
         where: {
           farmId,
-          updatedAt: { gte: startOfToday }
-        }
+          updatedAt: { gte: startOfToday },
+        },
       }),
 
       // ✅ Tasks
       prisma.task.count({
-        where: { farmId }
+        where: { farmId },
       }),
       prisma.task.count({
-        where: { farmId, status: "COMPLETED" }
+        where: { farmId, status: "COMPLETED" },
       }),
 
       // 💬 Messages
       prisma.message.count({
         where: {
           farmId,
-          createdAt: { gte: startOfToday }
-        }
+          createdAt: { gte: startOfToday },
+        },
       }),
       prisma.message.count({
         where: {
           farmId,
-          isRead: false
-        }
+          isRead: false,
+        },
       }),
 
       // 🧾 Subscription + Plan
@@ -73,31 +73,31 @@ const getDashboardStats = async (farmId) => {
           plan: {
             select: {
               name: true,
-              employeeLimit: true
-            }
-          }
-        }
-      })
+              employeeLimit: true,
+            },
+          },
+        },
+      }),
     ]);
 
     return {
       stats: {
         users: {
           total: totalEmployees,
-          addedThisMonth: employeesThisMonth
+          addedThisMonth: employeesThisMonth,
         },
         sops: {
           total: totalSOPs,
-          updatedToday: sopsUpdatedToday
+          updatedToday: sopsUpdatedToday,
         },
         tasks: {
           total: totalTasks,
-          completed: completedTasks
+          completed: completedTasks,
         },
         messages: {
           today: todayMessages,
-          unread: unreadMessages
-        }
+          unread: unreadMessages,
+        },
       },
 
       subscription: subscription
@@ -107,7 +107,7 @@ const getDashboardStats = async (farmId) => {
             employeeLimit: subscription.plan.employeeLimit,
             currentUsers: totalEmployees,
             remainingUsers: subscription.plan.employeeLimit - totalEmployees,
-            nextBillingDate: subscription.endDate
+            nextBillingDate: subscription.endDate,
           }
         : {
             plan: null,
@@ -115,8 +115,8 @@ const getDashboardStats = async (farmId) => {
             employeeLimit: 0,
             currentEmployees: totalEmployees,
             remainingEmployees: 0,
-            nextBillingDate: null
-          }
+            nextBillingDate: null,
+          },
     };
   } catch (error) {
     console.error("Dashboard Service Error:", error);
@@ -125,5 +125,5 @@ const getDashboardStats = async (farmId) => {
 };
 
 export const DashboardService = {
-  getDashboardStats
+  getDashboardStats,
 };

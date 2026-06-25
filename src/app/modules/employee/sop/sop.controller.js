@@ -40,7 +40,6 @@ const getSopsByModule = async (req, res, next) => {
   }
 };
 
-
 const downloadSop = async (req, res, next) => {
   try {
     const { sopId } = req.params;
@@ -57,7 +56,10 @@ const downloadSop = async (req, res, next) => {
 
     result.stream.pipe(res);
   } catch (error) {
-    if (error.message === "SOP not found" || error.message === "SOP file not found in database") {
+    if (
+      error.message === "SOP not found" ||
+      error.message === "SOP file not found in database"
+    ) {
       return res.status(404).json({
         success: false,
         message: error.message,

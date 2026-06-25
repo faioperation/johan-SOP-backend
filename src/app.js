@@ -20,7 +20,11 @@ const corsOrigins = ["https://farmcheck.app", "http://localhost:5173", "*"];
 app.use(
   cors({
     origin: (origin, callback) => {
-      if (!origin || corsOrigins.includes("*") || corsOrigins.includes(origin)) {
+      if (
+        !origin ||
+        corsOrigins.includes("*") ||
+        corsOrigins.includes(origin)
+      ) {
         callback(null, origin ?? true);
       } else {
         callback(new Error("Not allowed by CORS"));

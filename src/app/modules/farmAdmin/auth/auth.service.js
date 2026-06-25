@@ -39,10 +39,10 @@ const loginFarmAdmin = async (email, password) => {
   if (!user.isVerified) {
     // Send OTP again if not verified (proactive UX)
     await OtpService.sendOtp(prisma, user.email, user.name);
-    
+
     throw new DevBuildError(
       "Your account is not verified. A new verification OTP has been sent to your email.",
-      StatusCodes.FORBIDDEN
+      StatusCodes.FORBIDDEN,
     );
   }
 
@@ -228,7 +228,8 @@ export const FarmAdminAuthService = {
   },
 
   async registerFarmAdmin(payload) {
-    const { name, email, password, farmName, country, defaultLanguage } = payload;
+    const { name, email, password, farmName, country, defaultLanguage } =
+      payload;
 
     // 1. Check if user already exists
     const existingUser = await prisma.user.findUnique({
@@ -236,7 +237,10 @@ export const FarmAdminAuthService = {
     });
 
     if (existingUser) {
-      throw new DevBuildError("User with this email already exists", StatusCodes.CONFLICT);
+      throw new DevBuildError(
+        "User with this email already exists",
+        StatusCodes.CONFLICT,
+      );
     }
 
     // 2. Hash password

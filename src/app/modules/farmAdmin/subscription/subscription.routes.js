@@ -10,21 +10,21 @@ const router = express.Router();
  */
 
 router.get(
-    "/current",
-    checkAuthMiddleware(Role.FARM_ADMIN),
-    SubscriptionController.getCurrentSubscription
+  "/current",
+  checkAuthMiddleware(Role.FARM_ADMIN),
+  SubscriptionController.getCurrentSubscription,
 );
 
 router.get(
-    "/plans",
-    checkAuthMiddleware(Role.FARM_ADMIN),
-    SubscriptionController.getAvailablePlans
+  "/plans",
+  checkAuthMiddleware(Role.FARM_ADMIN),
+  SubscriptionController.getAvailablePlans,
 );
 
 router.get(
-    "/billing-history",
-    checkAuthMiddleware(Role.FARM_ADMIN),
-    SubscriptionController.getBillingHistory
+  "/billing-history",
+  checkAuthMiddleware(Role.FARM_ADMIN),
+  SubscriptionController.getBillingHistory,
 );
 
 export default router;

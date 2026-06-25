@@ -50,27 +50,36 @@ export const checkAuthMiddleware =
       req.user = user;
 
       // 🛑 ENFORCE SUBSCRIPTION (Skip for SYSTEM_OWNER or billing/auth routes)
-      const isBillingPath = req.originalUrl.startsWith("/api/farm-admin/subscription") || 
-                           req.originalUrl.startsWith("/api/farm-admin/payment");
-      const isAuthPath = req.originalUrl.includes("/auth") || 
-                        req.originalUrl.includes("/otp") || 
-                        req.originalUrl.includes("/login");
+      const isBillingPath =
+        req.originalUrl.startsWith("/api/farm-admin/subscription") ||
+        req.originalUrl.startsWith("/api/farm-admin/payment");
+      const isAuthPath =
+        req.originalUrl.includes("/auth") ||
+        req.originalUrl.includes("/otp") ||
+        req.originalUrl.includes("/login");
 
-      if (user.role !== "SYSTEM_OWNER" && user.farmId && !isBillingPath && !isAuthPath) {
+      if (
+        user.role !== "SYSTEM_OWNER" &&
+        user.farmId &&
+        !isBillingPath &&
+        !isAuthPath
+      ) {
         const subscription = await prisma.subscription.findUnique({
           where: { farmId: user.farmId },
         });
 
         const now = new Date();
-        const isExpired = !subscription || 
-                         subscription.status === "EXPIRED" || 
-                         subscription.status === "CANCELED" || 
-                         new Date(subscription.endDate) < now;
+        const isExpired =
+          !subscription ||
+          subscription.status === "EXPIRED" ||
+          subscription.status === "CANCELED" ||
+          new Date(subscription.endDate) < now;
 
         if (isExpired) {
           return res.status(403).json({
             success: false,
-            message: "Your subscription has expired. Please contact your farm administrator to renew.",
+            message:
+              "Your subscription has expired. Please contact your farm administrator to renew.",
           });
         }
       }

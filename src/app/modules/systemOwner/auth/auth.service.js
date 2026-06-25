@@ -2,181 +2,181 @@ import prisma from "../../../prisma/client.js";
 import bcrypt from "bcrypt";
 import DevBuildError from "../../../lib/DevBuildError.js";
 import { StatusCodes } from "http-status-codes";
-import { createUserTokens, createNewAccessTokenUsingRefreshToken } from "../../../utils/userTokenGenerator.js";
+import {
+  createUserTokens,
+  createNewAccessTokenUsingRefreshToken,
+} from "../../../utils/userTokenGenerator.js";
 import { OtpService } from "../../otp/otp.service.js";
 import { verifyToken } from "../../../utils/jwt.js";
 import { envVars } from "../../../config/env.js";
 
 const loginSystemOwner = async (email, password) => {
-    // 1. Check if user exists
-    const user = await prisma.user.findUnique({
-        where: { email },
-    });
+  // 1. Check if user exists
+  const user = await prisma.user.findUnique({
+    where: { email },
+  });
 
-    if (!user) {
-        throw new DevBuildError("User does not exist", StatusCodes.NOT_FOUND);
-    }
+  if (!user) {
+    throw new DevBuildError("User does not exist", StatusCodes.NOT_FOUND);
+  }
 
-    // 2. Check if user has SYSTEM_OWNER role
-    if (user.role !== "SYSTEM_OWNER") {
-        throw new DevBuildError("Unauthorized access", StatusCodes.FORBIDDEN);
-    }
+  // 2. Check if user has SYSTEM_OWNER role
+  if (user.role !== "SYSTEM_OWNER") {
+    throw new DevBuildError("Unauthorized access", StatusCodes.FORBIDDEN);
+  }
 
-    // 3. Verify password
-    // Note: Social login users might not have a passwordHash, handled by checking if it exists
-    if (!user.passwordHash) {
-        throw new DevBuildError(
-            "Invalid credentials. Please use social login or set a password.",
-            StatusCodes.UNAUTHORIZED
-        );
-    }
+  // 3. Verify password
+  // Note: Social login users might not have a passwordHash, handled by checking if it exists
+  if (!user.passwordHash) {
+    throw new DevBuildError(
+      "Invalid credentials. Please use social login or set a password.",
+      StatusCodes.UNAUTHORIZED,
+    );
+  }
 
-    const isPasswordValid = await bcrypt.compare(password, user.passwordHash);
+  const isPasswordValid = await bcrypt.compare(password, user.passwordHash);
 
-    if (!isPasswordValid) {
-        throw new DevBuildError("Invalid credentials", StatusCodes.UNAUTHORIZED);
-    }
+  if (!isPasswordValid) {
+    throw new DevBuildError("Invalid credentials", StatusCodes.UNAUTHORIZED);
+  }
 
-    // 4. Generate tokens
-    const tokens = await createUserTokens(user);
+  // 4. Generate tokens
+  const tokens = await createUserTokens(user);
 
-    // 5. Return tokens and user info (excluding password)
-    const { passwordHash, ...userInfo } = user;
+  // 5. Return tokens and user info (excluding password)
+  const { passwordHash, ...userInfo } = user;
 
-    return {
-        tokens,
-        user: userInfo,
-    };
+  return {
+    tokens,
+    user: userInfo,
+  };
 };
 
 export const SystemOwnerAuthService = {
-    loginSystemOwner,
+  loginSystemOwner,
 
-    // Forgot password flow
-    async forgotPassword(email) {
-        // 1. Check if user exists
-        const user = await prisma.user.findUnique({
-            where: { email },
-        });
+  // Forgot password flow
+  async forgotPassword(email) {
+    // 1. Check if user exists
+    const user = await prisma.user.findUnique({
+      where: { email },
+    });
 
-        if (!user) {
-            throw new DevBuildError("User does not exist", StatusCodes.NOT_FOUND);
-        }
+    if (!user) {
+      throw new DevBuildError("User does not exist", StatusCodes.NOT_FOUND);
+    }
 
-        // 2. Verify user is SYSTEM_OWNER
-        if (user.role !== "SYSTEM_OWNER") {
-            throw new DevBuildError(
-                "This endpoint is only for System Owners",
-                StatusCodes.FORBIDDEN
-            );
-        }
+    // 2. Verify user is SYSTEM_OWNER
+    if (user.role !== "SYSTEM_OWNER") {
+      throw new DevBuildError(
+        "This endpoint is only for System Owners",
+        StatusCodes.FORBIDDEN,
+      );
+    }
 
-        // 3. Check if user is verified
-        if (!user.isVerified) {
-            throw new DevBuildError(
-                "User is not verified",
-                StatusCodes.FORBIDDEN
-            );
-        }
+    // 3. Check if user is verified
+    if (!user.isVerified) {
+      throw new DevBuildError("User is not verified", StatusCodes.FORBIDDEN);
+    }
 
-        // 4. Reset forgotPasswordStatus and send OTP
-        await prisma.user.update({
-            where: { email },
-            data: { forgotPasswordStatus: false },
-        });
+    // 4. Reset forgotPasswordStatus and send OTP
+    await prisma.user.update({
+      where: { email },
+      data: { forgotPasswordStatus: false },
+    });
 
-        await OtpService.sendForgotPasswordOtp(prisma, email);
-        return true;
-    },
+    await OtpService.sendForgotPasswordOtp(prisma, email);
+    return true;
+  },
 
-    async verifyForgotPasswordOtp(email, otp) {
-        // 1. Verify user is SYSTEM_OWNER
-        const user = await prisma.user.findUnique({
-            where: { email },
-        });
+  async verifyForgotPasswordOtp(email, otp) {
+    // 1. Verify user is SYSTEM_OWNER
+    const user = await prisma.user.findUnique({
+      where: { email },
+    });
 
-        if (!user) {
-            throw new DevBuildError("User does not exist", StatusCodes.NOT_FOUND);
-        }
+    if (!user) {
+      throw new DevBuildError("User does not exist", StatusCodes.NOT_FOUND);
+    }
 
-        if (user.role !== "SYSTEM_OWNER") {
-            throw new DevBuildError(
-                "This endpoint is only for System Owners",
-                StatusCodes.FORBIDDEN
-            );
-        }
+    if (user.role !== "SYSTEM_OWNER") {
+      throw new DevBuildError(
+        "This endpoint is only for System Owners",
+        StatusCodes.FORBIDDEN,
+      );
+    }
 
-        // 2. Verify OTP and get reset token
-        const resetToken = await OtpService.verifyForgotPasswordOtp(
-            prisma,
-            email,
-            otp
-        );
+    // 2. Verify OTP and get reset token
+    const resetToken = await OtpService.verifyForgotPasswordOtp(
+      prisma,
+      email,
+      otp,
+    );
 
-        return resetToken;
-    },
+    return resetToken;
+  },
 
-    async resetPassword(userId, newPassword) {
-        // 1. Check if user exists
-        const user = await prisma.user.findUnique({
-            where: { id: userId },
-        });
+  async resetPassword(userId, newPassword) {
+    // 1. Check if user exists
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+    });
 
-        if (!user) {
-            throw new DevBuildError("User does not exist", StatusCodes.NOT_FOUND);
-        }
+    if (!user) {
+      throw new DevBuildError("User does not exist", StatusCodes.NOT_FOUND);
+    }
 
-        // 2. Verify user is SYSTEM_OWNER
-        if (user.role !== "SYSTEM_OWNER") {
-            throw new DevBuildError(
-                "This endpoint is only for System Owners",
-                StatusCodes.FORBIDDEN
-            );
-        }
+    // 2. Verify user is SYSTEM_OWNER
+    if (user.role !== "SYSTEM_OWNER") {
+      throw new DevBuildError(
+        "This endpoint is only for System Owners",
+        StatusCodes.FORBIDDEN,
+      );
+    }
 
-        // 3. Check forgotPasswordStatus
-        if (!user.forgotPasswordStatus) {
-            throw new DevBuildError(
-                "Please verify your forgot password OTP first",
-                StatusCodes.FORBIDDEN
-            );
-        }
+    // 3. Check forgotPasswordStatus
+    if (!user.forgotPasswordStatus) {
+      throw new DevBuildError(
+        "Please verify your forgot password OTP first",
+        StatusCodes.FORBIDDEN,
+      );
+    }
 
-        // 4. Hash new password
-        const passwordHash = await bcrypt.hash(newPassword, 10);
+    // 4. Hash new password
+    const passwordHash = await bcrypt.hash(newPassword, 10);
 
-        // 5. Update password and reset status
-        await prisma.user.update({
-            where: { id: userId },
-            data: {
-                passwordHash,
-                forgotPasswordStatus: false,
-            },
-        });
+    // 5. Update password and reset status
+    await prisma.user.update({
+      where: { id: userId },
+      data: {
+        passwordHash,
+        forgotPasswordStatus: false,
+      },
+    });
 
-        return true;
-    },
+    return true;
+  },
 
-    async refreshAccessToken(refreshToken) {
-        // 1. Verify token and get user ID
-        const decoded = verifyToken(refreshToken, envVars.JWT_REFRESH_TOKEN);
+  async refreshAccessToken(refreshToken) {
+    // 1. Verify token and get user ID
+    const decoded = verifyToken(refreshToken, envVars.JWT_REFRESH_TOKEN);
 
-        // 2. Issuing new access token (this handles user existence and status checks)
-        const accessToken = await createNewAccessTokenUsingRefreshToken(
-            prisma,
-            refreshToken
-        );
+    // 2. Issuing new access token (this handles user existence and status checks)
+    const accessToken = await createNewAccessTokenUsingRefreshToken(
+      prisma,
+      refreshToken,
+    );
 
-        // 3. Verify user is specifically a SYSTEM_OWNER (security layer for this module)
-        const user = await prisma.user.findUnique({
-            where: { id: decoded.id },
-            select: { role: true }
-        });
+    // 3. Verify user is specifically a SYSTEM_OWNER (security layer for this module)
+    const user = await prisma.user.findUnique({
+      where: { id: decoded.id },
+      select: { role: true },
+    });
 
-        if (!user || user.role !== "SYSTEM_OWNER") {
-            throw new DevBuildError("Unauthorized access", StatusCodes.FORBIDDEN);
-        }
+    if (!user || user.role !== "SYSTEM_OWNER") {
+      throw new DevBuildError("Unauthorized access", StatusCodes.FORBIDDEN);
+    }
 
-        return accessToken;
-    },
+    return accessToken;
+  },
 };

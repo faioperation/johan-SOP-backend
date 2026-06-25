@@ -1,6 +1,6 @@
 import app from "./app.js";
 import { envVars } from "./app/config/env.js";
-// import { connectRedis } from "./app/config/redis.config.js";
+import { connectRedis } from "./app/config/redis.config.js";
 import prisma from "./app/prisma/client.js";
 import { initSocket } from "./app/socket/index.js";
 

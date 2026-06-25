@@ -126,7 +126,11 @@ export const EmployeeAuthController = {
         });
       }
 
-      await EmployeeAuthService.changePassword(id, currentPassword, newPassword);
+      await EmployeeAuthService.changePassword(
+        id,
+        currentPassword,
+        newPassword,
+      );
 
       sendResponse(res, {
         success: true,

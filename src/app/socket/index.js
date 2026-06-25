@@ -31,7 +31,9 @@ export const initSocket = (httpServer) => {
       socket.data.farmId = farmId;
       socket.data.role = role;
 
-      console.log(`👤 User ${userId} joined farm_${farmId} (Room: user_${userId})`);
+      console.log(
+        `👤 User ${userId} joined farm_${farmId} (Room: user_${userId})`,
+      );
     });
 
     // 🔥 REGISTER MESSAGE EVENTS

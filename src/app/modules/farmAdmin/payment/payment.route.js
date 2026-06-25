@@ -9,7 +9,7 @@ const router = express.Router();
 router.post(
   "/checkout",
   checkAuthMiddleware(Role.FARM_ADMIN),
-  PaymentController.createCheckout
+  PaymentController.createCheckout,
 );
 
 // Stripe Webhook (NO AUTH)

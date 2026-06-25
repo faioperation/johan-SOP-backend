@@ -1,7 +1,13 @@
 import prisma from "../../../prisma/client.js";
 import { Role } from "../../../utils/role.js";
 
-const createMessage = async ({ content, senderId, receiverId, farmId, imageUrl }) => {
+const createMessage = async ({
+  content,
+  senderId,
+  receiverId,
+  farmId,
+  imageUrl,
+}) => {
   if ((!content && !imageUrl) || !senderId || !receiverId || !farmId) {
     throw new Error("Message must have content or image");
   }

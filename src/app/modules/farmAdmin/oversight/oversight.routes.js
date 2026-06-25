@@ -6,15 +6,15 @@ import { Role } from "../../../utils/role.js";
 const router = Router();
 
 router.get(
-    "/tasks",
-    checkAuthMiddleware(Role.FARM_ADMIN),
-    OversightController.getTasks
+  "/tasks",
+  checkAuthMiddleware(Role.FARM_ADMIN),
+  OversightController.getTasks,
 );
 
 router.get(
-    "/tasks/stats",
-    checkAuthMiddleware(Role.FARM_ADMIN),
-    OversightController.getTaskStats
+  "/tasks/stats",
+  checkAuthMiddleware(Role.FARM_ADMIN),
+  OversightController.getTaskStats,
 );
 
 export const OversightRoutes = router;

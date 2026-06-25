@@ -7,7 +7,7 @@ import { createMulterUpload } from "../../../config/multer.config.js";
 const router = express.Router();
 const uploadSOPMiddleware = createMulterUpload("sops");
 
-// This is for AI extraction 
+// This is for AI extraction
 // router.post(
 //   "/upload",
 //   checkAuthMiddleware(Role.FARM_ADMIN),
@@ -50,6 +50,10 @@ router.post(
 
 router.get("/", checkAuthMiddleware(Role.FARM_ADMIN), SOPController.getAllSOPs);
 
-router.get("/:id", checkAuthMiddleware(Role.FARM_ADMIN), SOPController.getSOPById);
+router.get(
+  "/:id",
+  checkAuthMiddleware(Role.FARM_ADMIN),
+  SOPController.getSOPById,
+);
 
 export default router;

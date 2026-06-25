@@ -14,10 +14,7 @@ router.post(
   PlanController.createPlan,
 );
 
-router.get(
-  "/all",
-  PlanController.getPlans,
-);
+router.get("/all", PlanController.getPlans);
 
 router.get(
   "/",

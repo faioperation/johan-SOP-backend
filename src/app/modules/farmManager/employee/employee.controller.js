@@ -2,7 +2,10 @@ import { EmployeeService } from "./employee.service.js";
 
 const getEmployees = async (req, res) => {
   try {
-    const employees = await EmployeeService.getEmployees(req.user.farmId, req.query);
+    const employees = await EmployeeService.getEmployees(
+      req.user.farmId,
+      req.query,
+    );
 
     res.json({
       success: true,

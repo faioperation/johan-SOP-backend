@@ -10,18 +10,24 @@ const createCheckoutSession = async (user, payload) => {
   const { planId, priceType } = payload; // priceType: 'monthly' or 'yearly'
 
   if (!planId) {
-    throw new DevBuildError("planId is required in the request body", StatusCodes.BAD_REQUEST);
+    throw new DevBuildError(
+      "planId is required in the request body",
+      StatusCodes.BAD_REQUEST,
+    );
   }
 
   if (!priceType || !["monthly", "yearly"].includes(priceType)) {
     throw new DevBuildError(
       "priceType is required and must be either 'monthly' or 'yearly'",
-      StatusCodes.BAD_REQUEST
+      StatusCodes.BAD_REQUEST,
     );
   }
 
   if (!user.farmId) {
-    throw new DevBuildError("User is not associated with any farm", StatusCodes.BAD_REQUEST);
+    throw new DevBuildError(
+      "User is not associated with any farm",
+      StatusCodes.BAD_REQUEST,
+    );
   }
 
   const plan = await prisma.plan.findUnique({
@@ -32,12 +38,15 @@ const createCheckoutSession = async (user, payload) => {
     throw new DevBuildError("Plan not found", StatusCodes.NOT_FOUND);
   }
 
-  let priceId = priceType === "yearly" ? plan.stripeYearlyPriceId : plan.stripeMonthlyPriceId;
+  let priceId =
+    priceType === "yearly"
+      ? plan.stripeYearlyPriceId
+      : plan.stripeMonthlyPriceId;
 
   if (!priceId) {
     throw new DevBuildError(
       `Stripe price ID for ${priceType} plan is not configured`,
-      StatusCodes.BAD_REQUEST
+      StatusCodes.BAD_REQUEST,
     );
   }
 
@@ -78,7 +87,7 @@ const handleWebhook = async (signature, rawBody) => {
     event = stripe.webhooks.constructEvent(
       rawBody,
       signature,
-      envVars.STRIPE_WEBHOOK_SECRET
+      envVars.STRIPE_WEBHOOK_SECRET,
     );
   } catch (err) {
     console.error(`Webhook signature verification failed: ${err.message}`);
@@ -135,7 +144,7 @@ const handleWebhook = async (signature, rawBody) => {
       }),
       prisma.farm.update({
         where: { id: farmId },
-        data: { 
+        data: {
           status: "ACTIVE",
           stripeCustomerId: session.customer,
         },
@@ -144,7 +153,7 @@ const handleWebhook = async (signature, rawBody) => {
   } else if (event.type === "invoice.payment_succeeded") {
     const invoice = event.data.object;
     console.log(`🔔 invoice.payment_succeeded received: ${invoice.id}`);
-    
+
     // Robust metadata extraction helper
     const getMetadata = (invoice, field) => {
       return (
@@ -160,9 +169,13 @@ const handleWebhook = async (signature, rawBody) => {
 
     // Fallback 1: Fetch from Stripe Subscription API
     if (!farmId && invoice.subscription) {
-      console.log(`🔍 Metadata missing on invoice, fetching from Stripe subscription: ${invoice.subscription}`);
+      console.log(
+        `🔍 Metadata missing on invoice, fetching from Stripe subscription: ${invoice.subscription}`,
+      );
       try {
-        const subscription = await stripe.subscriptions.retrieve(invoice.subscription);
+        const subscription = await stripe.subscriptions.retrieve(
+          invoice.subscription,
+        );
         farmId = farmId || subscription.metadata?.farmId;
         planId = planId || subscription.metadata?.planId;
         priceType = priceType || subscription.metadata?.priceType;
@@ -173,9 +186,11 @@ const handleWebhook = async (signature, rawBody) => {
 
     // Fallback 2: Search our DB by Stripe Subscription ID
     if (!farmId && invoice.subscription) {
-      console.log(`🔍 Metadata missing, searching DB by stripeSubscriptionId: ${invoice.subscription}`);
+      console.log(
+        `🔍 Metadata missing, searching DB by stripeSubscriptionId: ${invoice.subscription}`,
+      );
       const sub = await prisma.subscription.findUnique({
-        where: { stripeSubscriptionId: invoice.subscription }
+        where: { stripeSubscriptionId: invoice.subscription },
       });
       if (sub) {
         farmId = sub.farmId;
@@ -186,14 +201,18 @@ const handleWebhook = async (signature, rawBody) => {
 
     // Fallback 3: Search our DB by Stripe Customer ID
     if (!farmId && invoice.customer) {
-      console.log(`🔍 Metadata missing, searching DB by stripeCustomerId: ${invoice.customer}`);
+      console.log(
+        `🔍 Metadata missing, searching DB by stripeCustomerId: ${invoice.customer}`,
+      );
       const farm = await prisma.farm.findUnique({
-        where: { stripeCustomerId: invoice.customer }
+        where: { stripeCustomerId: invoice.customer },
       });
       if (farm) farmId = farm.id;
     }
 
-    console.log(`📍 Webhook Result - Farm: ${farmId}, Plan: ${planId}, Amount: ${invoice.amount_paid}`);
+    console.log(
+      `📍 Webhook Result - Farm: ${farmId}, Plan: ${planId}, Amount: ${invoice.amount_paid}`,
+    );
 
     if (farmId && invoice.amount_paid > 0) {
       // Fetch plan name if planId is available
@@ -204,8 +223,8 @@ const handleWebhook = async (signature, rawBody) => {
       }
 
       // Calculate period end (usually from the line items)
-      const periodEnd = invoice.lines?.data?.[0]?.period?.end 
-        ? new Date(invoice.lines.data[0].period.end * 1000) 
+      const periodEnd = invoice.lines?.data?.[0]?.period?.end
+        ? new Date(invoice.lines.data[0].period.end * 1000)
         : null;
 
       await prisma.$transaction([
@@ -231,7 +250,9 @@ const handleWebhook = async (signature, rawBody) => {
     }
   } else if (event.type === "invoice.payment_failed") {
     const invoice = event.data.object;
-    const farmId = invoice.subscription_details?.metadata?.farmId || invoice.metadata?.farmId;
+    const farmId =
+      invoice.subscription_details?.metadata?.farmId ||
+      invoice.metadata?.farmId;
 
     if (farmId) {
       const farm = await prisma.farm.findUnique({

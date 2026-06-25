@@ -8,7 +8,7 @@ const router = express.Router();
 router.get(
   "/",
   checkAuthMiddleware(Role.FARM_ADMIN),
-  DashboardController.getDashboard
+  DashboardController.getDashboard,
 );
 
 export default router;

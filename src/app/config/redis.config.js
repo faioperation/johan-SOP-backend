@@ -1,7 +1,6 @@
 import { createClient } from "redis";
 import { envVars } from "./env.js";
 
-
 export const redisClient = createClient({
   username: envVars.REDIS_USERNAME,
   password: envVars.REDIS_PASSWORD,

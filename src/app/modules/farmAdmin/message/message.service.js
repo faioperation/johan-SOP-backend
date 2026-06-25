@@ -40,18 +40,18 @@ const getOversightMessages = async (farmId, query) => {
         farmId,
         ...(search
           ? {
-            OR: [
-              { content: { contains: search, mode: "insensitive" } },
-              {
-                sender: { name: { contains: search, mode: "insensitive" } },
-              },
-              {
-                receiver: {
-                  name: { contains: search, mode: "insensitive" },
+              OR: [
+                { content: { contains: search, mode: "insensitive" } },
+                {
+                  sender: { name: { contains: search, mode: "insensitive" } },
                 },
-              },
-            ],
-          }
+                {
+                  receiver: {
+                    name: { contains: search, mode: "insensitive" },
+                  },
+                },
+              ],
+            }
           : {}),
       },
       include: {
@@ -156,8 +156,12 @@ const getInbox = async (adminId, farmId) => {
     const messages = await prisma.message.findMany({
       where: { farmId },
       include: {
-        sender: { select: { id: true, name: true, role: true, avatarUrl: true } },
-        receiver: { select: { id: true, name: true, role: true, avatarUrl: true } },
+        sender: {
+          select: { id: true, name: true, role: true, avatarUrl: true },
+        },
+        receiver: {
+          select: { id: true, name: true, role: true, avatarUrl: true },
+        },
       },
       orderBy: { createdAt: "desc" },
     });
@@ -207,7 +211,8 @@ const getInbox = async (adminId, farmId) => {
         });
 
         const data = threadMap.get(threadKey);
-        const isAdminInvolved = msg.senderId === adminId || msg.receiverId === adminId;
+        const isAdminInvolved =
+          msg.senderId === adminId || msg.receiverId === adminId;
         if (!msg.isRead) {
           if (!isAdminInvolved || msg.receiverId === adminId) {
             data.unreadCount = 1;
@@ -215,7 +220,8 @@ const getInbox = async (adminId, farmId) => {
         }
       } else {
         const data = threadMap.get(threadKey);
-        const isAdminInvolved = msg.senderId === adminId || msg.receiverId === adminId;
+        const isAdminInvolved =
+          msg.senderId === adminId || msg.receiverId === adminId;
         if (!msg.isRead) {
           if (!isAdminInvolved || msg.receiverId === adminId) {
             data.unreadCount += 1;
@@ -275,7 +281,13 @@ const getHistory = async (adminId, partnerId, farmId) => {
   }
 };
 
-const sendMessage = async ({ content, senderId, receiverId, farmId, imageUrl }) => {
+const sendMessage = async ({
+  content,
+  senderId,
+  receiverId,
+  farmId,
+  imageUrl,
+}) => {
   return await CoreMessageService.createMessage({
     content,
     senderId,
@@ -313,14 +325,14 @@ const getOversightInbox = async (farmId, query) => {
         farmId,
         ...(search
           ? {
-            OR: [
-              { content: { contains: search, mode: "insensitive" } },
-              { sender: { name: { contains: search, mode: "insensitive" } } },
-              {
-                receiver: { name: { contains: search, mode: "insensitive" } },
-              },
-            ],
-          }
+              OR: [
+                { content: { contains: search, mode: "insensitive" } },
+                { sender: { name: { contains: search, mode: "insensitive" } } },
+                {
+                  receiver: { name: { contains: search, mode: "insensitive" } },
+                },
+              ],
+            }
           : {}),
       },
       include: {

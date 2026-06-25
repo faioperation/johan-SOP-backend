@@ -6,164 +6,168 @@ import { envVars } from "../../../config/env.js";
 import DevBuildError from "../../../lib/DevBuildError.js";
 
 const loginSystemOwner = async (req, res, next) => {
-    try {
-        const { email, password } = req.body;
+  try {
+    const { email, password } = req.body;
 
-        const result = await SystemOwnerAuthService.loginSystemOwner(email, password);
+    const result = await SystemOwnerAuthService.loginSystemOwner(
+      email,
+      password,
+    );
 
-        // Set cookies
-        setAuthCookie(res, result.tokens);
+    // Set cookies
+    setAuthCookie(res, result.tokens);
 
-        sendResponse(res, {
-            success: true,
-            message: "System Owner logged in successfully",
-            statusCode: StatusCodes.OK,
-            data: {
-                accessToken: result.tokens.accessToken,
-                user: result.user,
-            },
-        });
-    } catch (error) {
-        next(error);
-    }
+    sendResponse(res, {
+      success: true,
+      message: "System Owner logged in successfully",
+      statusCode: StatusCodes.OK,
+      data: {
+        accessToken: result.tokens.accessToken,
+        user: result.user,
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
 };
 
 export const SystemOwnerAuthController = {
-    loginSystemOwner,
-    
-    async refreshAccessToken(req, res, next) {
-        try {
-            const refreshToken = req.cookies?.refreshToken;
+  loginSystemOwner,
 
-            if (!refreshToken) {
-                throw new DevBuildError(
-                    "No refresh token received from cookies",
-                    StatusCodes.BAD_REQUEST
-                );
-            }
+  async refreshAccessToken(req, res, next) {
+    try {
+      const refreshToken = req.cookies?.refreshToken;
 
-            const accessToken = await SystemOwnerAuthService.refreshAccessToken(refreshToken);
+      if (!refreshToken) {
+        throw new DevBuildError(
+          "No refresh token received from cookies",
+          StatusCodes.BAD_REQUEST,
+        );
+      }
 
-            // Re-set cookies to refresh expiration if needed
-            setAuthCookie(res, { accessToken, refreshToken });
+      const accessToken =
+        await SystemOwnerAuthService.refreshAccessToken(refreshToken);
 
-            sendResponse(res, {
-                success: true,
-                message: "New access token retrieved successfully",
-                statusCode: StatusCodes.OK,
-                data: {
-                    accessToken,
-                },
-            });
-        } catch (error) {
-            next(error);
-        }
-    },
+      // Re-set cookies to refresh expiration if needed
+      setAuthCookie(res, { accessToken, refreshToken });
 
-    async logout(req, res, next) {
-        try {
-            res.clearCookie("accessToken", {
-                httpOnly: true,
-                secure: envVars.NODE_ENV === "production",
-                sameSite: "none",
-            });
+      sendResponse(res, {
+        success: true,
+        message: "New access token retrieved successfully",
+        statusCode: StatusCodes.OK,
+        data: {
+          accessToken,
+        },
+      });
+    } catch (error) {
+      next(error);
+    }
+  },
 
-            res.clearCookie("refreshToken", {
-                httpOnly: true,
-                secure: envVars.NODE_ENV === "production",
-                sameSite: "none",
-            });
+  async logout(req, res, next) {
+    try {
+      res.clearCookie("accessToken", {
+        httpOnly: true,
+        secure: envVars.NODE_ENV === "production",
+        sameSite: "none",
+      });
 
-            sendResponse(res, {
-                success: true,
-                message: "System Owner logged out successfully",
-                statusCode: StatusCodes.OK,
-                data: null,
-            });
-        } catch (error) {
-            next(error);
-        }
-    },
+      res.clearCookie("refreshToken", {
+        httpOnly: true,
+        secure: envVars.NODE_ENV === "production",
+        sameSite: "none",
+      });
 
-    async forgotPassword(req, res, next) {
-        try {
-            const { email } = req.body;
+      sendResponse(res, {
+        success: true,
+        message: "System Owner logged out successfully",
+        statusCode: StatusCodes.OK,
+        data: null,
+      });
+    } catch (error) {
+      next(error);
+    }
+  },
 
-            if (!email) {
-                return sendResponse(res, {
-                    success: false,
-                    statusCode: StatusCodes.BAD_REQUEST,
-                    message: "Email is required",
-                    data: null,
-                });
-            }
+  async forgotPassword(req, res, next) {
+    try {
+      const { email } = req.body;
 
-            await SystemOwnerAuthService.forgotPassword(email);
+      if (!email) {
+        return sendResponse(res, {
+          success: false,
+          statusCode: StatusCodes.BAD_REQUEST,
+          message: "Email is required",
+          data: null,
+        });
+      }
 
-            sendResponse(res, {
-                success: true,
-                statusCode: StatusCodes.OK,
-                message: "Forgot password OTP sent successfully",
-                data: null,
-            });
-        } catch (error) {
-            next(error);
-        }
-    },
+      await SystemOwnerAuthService.forgotPassword(email);
 
-    async verifyForgotPasswordOtp(req, res, next) {
-        try {
-            const { email, otp } = req.body;
+      sendResponse(res, {
+        success: true,
+        statusCode: StatusCodes.OK,
+        message: "Forgot password OTP sent successfully",
+        data: null,
+      });
+    } catch (error) {
+      next(error);
+    }
+  },
 
-            if (!email || !otp) {
-                return sendResponse(res, {
-                    success: false,
-                    statusCode: StatusCodes.BAD_REQUEST,
-                    message: "Email and OTP are required",
-                    data: null,
-                });
-            }
+  async verifyForgotPasswordOtp(req, res, next) {
+    try {
+      const { email, otp } = req.body;
 
-            const resetToken = await SystemOwnerAuthService.verifyForgotPasswordOtp(
-                email,
-                otp
-            );
+      if (!email || !otp) {
+        return sendResponse(res, {
+          success: false,
+          statusCode: StatusCodes.BAD_REQUEST,
+          message: "Email and OTP are required",
+          data: null,
+        });
+      }
 
-            sendResponse(res, {
-                success: true,
-                statusCode: StatusCodes.OK,
-                message: "OTP verified successfully",
-                data: { resetToken },
-            });
-        } catch (error) {
-            next(error);
-        }
-    },
+      const resetToken = await SystemOwnerAuthService.verifyForgotPasswordOtp(
+        email,
+        otp,
+      );
 
-    async resetPassword(req, res, next) {
-        try {
-            const { id } = req.user; // From auth middleware
-            const { newPassword } = req.body;
+      sendResponse(res, {
+        success: true,
+        statusCode: StatusCodes.OK,
+        message: "OTP verified successfully",
+        data: { resetToken },
+      });
+    } catch (error) {
+      next(error);
+    }
+  },
 
-            if (!newPassword) {
-                return sendResponse(res, {
-                    success: false,
-                    statusCode: StatusCodes.BAD_REQUEST,
-                    message: "New password is required",
-                    data: null,
-                });
-            }
+  async resetPassword(req, res, next) {
+    try {
+      const { id } = req.user; // From auth middleware
+      const { newPassword } = req.body;
 
-            await SystemOwnerAuthService.resetPassword(id, newPassword);
+      if (!newPassword) {
+        return sendResponse(res, {
+          success: false,
+          statusCode: StatusCodes.BAD_REQUEST,
+          message: "New password is required",
+          data: null,
+        });
+      }
 
-            sendResponse(res, {
-                success: true,
-                statusCode: StatusCodes.OK,
-                message: "Password reset successfully",
-                data: null,
-            });
-        } catch (error) {
-            next(error);
-        }
-    },
+      await SystemOwnerAuthService.resetPassword(id, newPassword);
+
+      sendResponse(res, {
+        success: true,
+        statusCode: StatusCodes.OK,
+        message: "Password reset successfully",
+        data: null,
+      });
+    } catch (error) {
+      next(error);
+    }
+  },
 };

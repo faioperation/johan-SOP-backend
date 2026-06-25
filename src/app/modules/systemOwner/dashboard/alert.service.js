@@ -33,7 +33,7 @@ export const AlertService = {
 
     for (const sub of expiringSubscriptions) {
       const alertMessage = `Farm "${sub.farm.name}" subscription expires in 3 days`;
-      
+
       // Check if alert already exists for this farm today
       const existingAlert = await prisma.systemAlert.findFirst({
         where: {
@@ -78,7 +78,7 @@ export const AlertService = {
 
     for (const sub of expiringTrials) {
       const alertMessage = `Trial version for farm "${sub.farm.name}" will expire tomorrow`;
-      
+
       // Check if alert already exists for this farm today
       const existingAlert = await prisma.systemAlert.findFirst({
         where: {

@@ -6,15 +6,15 @@ import { FarmSettingsController } from "./farmSettings.controller.js";
 const router = express.Router();
 
 router.get(
-    "/",
-    checkAuthMiddleware(Role.FARM_ADMIN),
-    FarmSettingsController.getFarmSettings
+  "/",
+  checkAuthMiddleware(Role.FARM_ADMIN),
+  FarmSettingsController.getFarmSettings,
 );
 
 router.patch(
-    "/",
-    checkAuthMiddleware(Role.FARM_ADMIN),
-    FarmSettingsController.updateFarmSettings
+  "/",
+  checkAuthMiddleware(Role.FARM_ADMIN),
+  FarmSettingsController.updateFarmSettings,
 );
 
 export default router;

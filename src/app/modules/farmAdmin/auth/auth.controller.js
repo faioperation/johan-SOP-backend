@@ -68,7 +68,8 @@ export const FarmAdminAuthController = {
   async resendOtp(req, res, next) {
     try {
       const { email } = req.body;
-      if (!email) throw new DevBuildError("Email is required", StatusCodes.BAD_REQUEST);
+      if (!email)
+        throw new DevBuildError("Email is required", StatusCodes.BAD_REQUEST);
 
       await OtpService.sendOtp(prisma, email);
 
