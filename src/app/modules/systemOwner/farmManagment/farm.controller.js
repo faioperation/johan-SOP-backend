@@ -20,29 +20,33 @@ export const FarmController = {
 
   async createFarm(req, res, next) {
     try {
-      const { name, adminEmail, country, defaultLanguage } = req.body;
+      const { name, adminName, adminEmail, password, country, defaultLanguage, planId, startDate, endDate } = req.body;
 
-      if (!name || !adminEmail || !country || !defaultLanguage) {
+      if (!name || !adminName || !adminEmail || !password || !country || !defaultLanguage || !planId || !startDate || !endDate) {
         return sendResponse(res, {
           success: false,
           statusCode: StatusCodes.BAD_REQUEST,
-          message: "All fields are required",
+          message: "All fields are required including planId, start date, and end date",
           data: null,
         });
       }
 
       const result = await FarmService.createFarm({
         name,
+        adminName,
         adminEmail,
+        password,
         country,
         defaultLanguage,
+        planId,
+        startDate,
+        endDate,
       });
 
       sendResponse(res, {
         success: true,
         statusCode: StatusCodes.CREATED,
-        message:
-          "Farm created successfully. Default admin password is admin123",
+        message: "Farm, Farm Admin and Subscription created successfully",
         data: result,
       });
     } catch (error) {

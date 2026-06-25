@@ -1,8 +1,12 @@
 import prisma from "../../../prisma/client.js";
 import { startOfMonth, endOfMonth } from "date-fns";
+import { AlertService } from "./alert.service.js";
 
 export const DashboardService = {
   async getDashboardData() {
+    // Generate/refresh alerts
+    await AlertService.generateDailyAlerts();
+
     const now = new Date();
 
     const [
@@ -54,7 +58,11 @@ export const DashboardService = {
         orderBy: { createdAt: "desc" },
         include: {
           users: true,
-          subscription: true,
+          subscription: {
+            include: {
+              plan: true,
+            },
+          },
         },
       }),
 
@@ -71,7 +79,7 @@ export const DashboardService = {
       name: farm.name,
       status: farm.status,
       users: farm.users.length,
-      plan: farm.subscription?.plan || "N/A",
+      plan: farm.subscription?.plan?.name || "N/A",
       revenue: farm.subscription?.price || 0,
     }));
 

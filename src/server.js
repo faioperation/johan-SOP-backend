@@ -2,6 +2,7 @@ import app from "./app.js";
 import { envVars } from "./app/config/env.js";
 // import { connectRedis } from "./app/config/redis.config.js";
 import prisma from "./app/prisma/client.js";
+import { initSocket } from "./app/socket/index.js";
 
 let server;
 
@@ -12,12 +13,16 @@ const startServer = async () => {
     console.log(`Environment: ${envVars.NODE_ENV}`);
 
     // Connect Redis
-    // await connectRedis();
-    // console.log("Redis Connected Successfully 🚚✅");
+
+    connectRedis();
 
     // Start server
     server = app.listen(PORT, () => {
       console.log(`Server running on port 🛺✅ ${PORT}`);
+
+      // 🔥 Initialize Socket.IO
+      initSocket(server);
+      console.log("🔌 Socket.IO initialized");
     });
   } catch (error) {
     console.error("❌ Failed to start server:", error);
@@ -32,10 +37,7 @@ startServer();
  * 🔴 Unhandled Promise Rejection
  */
 process.on("unhandledRejection", async (err) => {
-  console.error(
-    "Unhandled Rejection Detected... server shutting down...",
-    err
-  );
+  console.error("Unhandled Rejection Detected... server shutting down...", err);
 
   if (server) {
     server.close(async () => {
@@ -52,10 +54,7 @@ process.on("unhandledRejection", async (err) => {
  * 🔴 Uncaught Exception
  */
 process.on("uncaughtException", async (err) => {
-  console.error(
-    "Uncaught Exception Detected... server shutting down...",
-    err
-  );
+  console.error("Uncaught Exception Detected... server shutting down...", err);
 
   if (server) {
     server.close(async () => {

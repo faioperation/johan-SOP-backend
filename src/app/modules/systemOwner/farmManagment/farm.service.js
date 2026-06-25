@@ -15,7 +15,11 @@ export const FarmService = {
             role: true,
           },
         },
-        subscription: true,
+        subscription: {
+          include: {
+            plan: true,
+          },
+        },
       },
     });
 
@@ -30,7 +34,8 @@ export const FarmService = {
         defaultLanguage: farm.defaultLanguage,
         users: farm.users.length,
         adminEmail: admin?.email || "N/A",
-        plan: farm.subscription?.plan || "N/A",
+        plan: farm.subscription?.plan?.name || "N/A",
+        planDuration: farm.subscription?.priceType || "N/A",
         createdAt: farm.createdAt,
       };
     });
@@ -38,7 +43,17 @@ export const FarmService = {
 
   // ✅ CREATE FARM
   async createFarm(payload) {
-    const { name, adminEmail, country, defaultLanguage } = payload;
+    const {
+      name,
+      adminName,
+      adminEmail,
+      password,
+      country,
+      defaultLanguage,
+      planId,
+      startDate,
+      endDate,
+    } = payload;
 
     return prisma.$transaction(async (tx) => {
       const existingUser = await tx.user.findUnique({
@@ -52,6 +67,46 @@ export const FarmService = {
         );
       }
 
+      // Find the selected plan
+      const planRecord = await tx.plan.findUnique({
+        where: { id: planId },
+      });
+
+      if (!planRecord) {
+        throw new DevBuildError(
+          "Selected plan not found",
+          StatusCodes.BAD_REQUEST,
+        );
+      }
+
+      const start = new Date(startDate);
+      const end = new Date(endDate);
+
+      if (isNaN(start.getTime()) || isNaN(end.getTime())) {
+        throw new DevBuildError(
+          "Invalid start date or end date format",
+          StatusCodes.BAD_REQUEST,
+        );
+      }
+
+      if (start >= end) {
+        throw new DevBuildError(
+          "Start date must be before end date",
+          StatusCodes.BAD_REQUEST,
+        );
+      }
+
+      // Calculate diff in days to decide monthly vs yearly pricing
+      const diffTime = Math.abs(end - start);
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+      let price = planRecord.priceMonthly;
+      let priceType = "monthly";
+      if (diffDays >= 360) {
+        price = planRecord.priceYearly;
+        priceType = "yearly";
+      }
+
       const farm = await tx.farm.create({
         data: {
           name,
@@ -61,11 +116,11 @@ export const FarmService = {
         },
       });
 
-      const passwordHash = await bcrypt.hash("admin123", 10);
+      const passwordHash = await bcrypt.hash(password, 10);
 
-      await tx.user.create({
+      const admin = await tx.user.create({
         data: {
-          name: "Farm Admin",
+          name: adminName,
           email: adminEmail,
           passwordHash,
           role: "FARM_ADMIN",
@@ -75,10 +130,37 @@ export const FarmService = {
         },
       });
 
+      // Create subscription for the farm
+      const subscription = await tx.subscription.create({
+        data: {
+          farmId: farm.id,
+          planId: planRecord.id,
+          status: "ACTIVE",
+          startDate: start,
+          endDate: end,
+          price,
+          priceType,
+        },
+      });
+
       return {
         farmId: farm.id,
         farmName: farm.name,
-        adminEmail,
+        admin: {
+          id: admin.id,
+          name: admin.name,
+          email: admin.email,
+        },
+        subscription: {
+          id: subscription.id,
+          planId: planRecord.id,
+          planName: planRecord.name,
+          status: subscription.status,
+          startDate: subscription.startDate,
+          endDate: subscription.endDate,
+          price: subscription.price,
+          priceType: subscription.priceType,
+        },
       };
     });
   },
@@ -89,7 +171,11 @@ export const FarmService = {
       where: { id: farmId },
       include: {
         users: true,
-        subscription: true,
+        subscription: {
+          include: {
+            plan: true,
+          },
+        },
       },
     });
 
@@ -108,8 +194,9 @@ export const FarmService = {
       language: farm.defaultLanguage,
       createdAt: farm.createdAt,
       totalUsers: farm.users.length,
-      plan: farm.subscription?.plan || "Basic",
-      employeeLimit: 50,
+      plan: farm.subscription?.plan?.name || "N/A",
+      planDuration: farm.subscription?.priceType || "N/A",
+      employeeLimit: farm.subscription?.plan?.employeeLimit || 0,
     };
   },
 
